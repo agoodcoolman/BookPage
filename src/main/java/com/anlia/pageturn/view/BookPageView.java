@@ -11,15 +11,13 @@ import android.graphics.Path;
 import android.graphics.Region;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Trace;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Scroller;
-
-import com.anlia.pageturn.R;
 import com.anlia.pageturn.bean.MyPoint;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Created by anlia on 2017/10/19.
@@ -110,15 +108,12 @@ public class BookPageView extends View {
         pathAPaint.setAntiAlias(true);//设置抗锯齿
 
         pathBPaint = new Paint();
-        pathBPaint.setColor(getResources().getColor(R.color.blue_light));
+        pathBPaint.setColor(Color.RED);
         pathBPaint.setAntiAlias(true);//设置抗锯齿
-//        pathBPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_ATOP));我们不需要单独绘制path了，记得注释掉
 
         pathCPaint = new Paint();
         pathCPaint.setColor(Color.YELLOW);
         pathCPaint.setAntiAlias(true);//设置抗锯齿
-//        pathCPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_ATOP));
-//        pathCPaint.setStyle(Paint.Style.STROKE);
 
         pathCContentPaint = new Paint();
         pathCContentPaint.setColor(Color.YELLOW);
@@ -182,12 +177,12 @@ public class BookPageView extends View {
 
     private int measureSize(int defaultSize,int measureSpec) {
         int result = defaultSize;
-        int specMode = View.MeasureSpec.getMode(measureSpec);
-        int specSize = View.MeasureSpec.getSize(measureSpec);
+        int specMode = MeasureSpec.getMode(measureSpec);
+        int specSize = MeasureSpec.getSize(measureSpec);
 
-        if (specMode == View.MeasureSpec.EXACTLY) {
+        if (specMode == MeasureSpec.EXACTLY) {
             result = specSize;
-        } else if (specMode == View.MeasureSpec.AT_MOST) {
+        } else if (specMode == MeasureSpec.AT_MOST) {
             result = Math.min(result, specSize);
         }
         return result;
@@ -222,22 +217,6 @@ public class BookPageView extends View {
             }
         }
 
-        //绘制各标识点
-        /*canvas.drawText("a",a.x,a.y,pointPaint);
-        canvas.drawText("f",f.x,f.y,pointPaint);
-        canvas.drawText("g",g.x,g.y,pointPaint);
-
-        canvas.drawText("e",e.x,e.y,pointPaint);
-        canvas.drawText("h",h.x,h.y,pointPaint);
-
-        canvas.drawText("c",c.x,c.y,pointPaint);
-        canvas.drawText("j",j.x,j.y,pointPaint);
-
-        canvas.drawText("b",b.x,b.y,pointPaint);
-        canvas.drawText("k",k.x,k.y,pointPaint);
-
-        canvas.drawText("d",d.x,d.y,pointPaint);
-        canvas.drawText("i",i.x,i.y,pointPaint);*/
     }
 
     @TargetApi(18)
@@ -259,9 +238,6 @@ public class BookPageView extends View {
                 setTouchPoint(x,y,STYLE_TOP_RIGHT);
             }else {
                 setTouchPoint(x,y,STYLE_LOWER_RIGHT);
-            }
-            if (mScroller.getFinalX() == x && mScroller.getFinalY() == y){
-                setDefaultPath();
             }
         }
     }
@@ -297,10 +273,22 @@ public class BookPageView extends View {
                 setTouchPoint(event.getX(),event.getY(),style);
                 break;
             case MotionEvent.ACTION_UP:
-                startCancelAnim();
+                if(event.getX() > defaultWidth * 0.8) {
+                    startCancelAnim();
+                } else {
+                    finishAnim();
+                }
                 break;
         }
         return true;
+    }
+
+    /**
+     * 结束翻页 结尾的动画
+     */
+    public void finishAnim() {
+        // 直接让a点的横坐标 往左翻页
+        mScroller.startScroll((int) a.x, (int) a.y, -2*viewWidth, 0, 400);
     }
 
     /**
@@ -336,10 +324,10 @@ public class BookPageView extends View {
                 f.y = 0;
                 calcPointsXY(a,f);
                 touchPoint = new MyPoint(x,y);
-                if(calcPointCX(touchPoint,f)<0){//如果c点x坐标小于0则重新测量a点坐标
+                /*if(calcPointCX(touchPoint,f)<0){//如果c点x坐标小于0则重新测量a点坐标
                     calcPointAByTouchPoint();
                     calcPointsXY(a,f);
-                }
+                }*/
                 postInvalidate();
                 break;
             case STYLE_LEFT:
@@ -355,10 +343,10 @@ public class BookPageView extends View {
                 f.y = viewHeight;
                 calcPointsXY(a,f);
                 touchPoint = new MyPoint(x,y);
-                if(calcPointCX(touchPoint,f)<0){//如果c点x坐标小于0则重新测量a点坐标
+                /*if(calcPointCX(touchPoint,f)<0){//如果c点x坐标小于0则重新测量a点坐标
                     calcPointAByTouchPoint();
                     calcPointsXY(a,f);
-                }
+                }*/
                 postInvalidate();
                 break;
             default:
@@ -520,7 +508,6 @@ public class BookPageView extends View {
 
         Path mPath = new Path();
         mPath.moveTo(a.x- Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
-//        mPath.lineTo(i.x,i.y);
         mPath.lineTo(h.x,h.y);
         mPath.lineTo(a.x,a.y);
         mPath.close();
