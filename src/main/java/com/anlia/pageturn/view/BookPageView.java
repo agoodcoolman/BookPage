@@ -50,13 +50,16 @@ public class BookPageView extends View {
 
     private Scroller mScroller;
 
+    public static int LAST_PAGE = 0x1;
+    public static int NEXT_PAGE = 0x2;
     private String style;
     public static final String STYLE_LEFT = "STYLE_LEFT";//点击左边区域
     public static final String STYLE_RIGHT = "STYLE_RIGHT";//点击右边区域
     public static final String STYLE_MIDDLE = "STYLE_MIDDLE";//点击中间区域
     public static final String STYLE_TOP_RIGHT = "STYLE_TOP_RIGHT";//f点在右上角
     public static final String STYLE_LOWER_RIGHT = "STYLE_LOWER_RIGHT";//f点在右下角
-
+    public static final String STYLE_TOP_LEFT = "STYLE_TOP_LEFT";//f点在左上角
+    public static final String STYLE_LOWER_LEFT = "STYLE_LOWER_LEFT";//f点在左下角
     private GradientDrawable drawableLeftTopRight;
     private GradientDrawable drawableLeftLowerRight;
 
@@ -151,7 +154,7 @@ public class BookPageView extends View {
         mCanvas.drawPath(getPathDefault(),pathPaint);
         mCanvas.drawText("这是在B区域的内容...BBBB", viewWidth-260, viewHeight-100, textPaint);
 
-        //结束绘制区域内的内容...
+        // 结束绘制区域内的内容...
     }
 
     @Override
@@ -172,7 +175,7 @@ public class BookPageView extends View {
         drawPathBContentBitmap(pathBContentBitmap,pathBPaint);
 
         pathCContentBitmap = Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.RGB_565);
-        drawPathAContentBitmap(pathCContentBitmap,pathCPaint);
+        drawPathAContentBitmap(pathCContentBitmap, pathCPaint);
     }
 
     private int measureSize(int defaultSize,int measureSpec) {
@@ -214,11 +217,66 @@ public class BookPageView extends View {
                 beginTrace("drawPathB");
                 drawPathBContent(canvas,getPathAFromLowerRight());
                 endTrace();
+            } else if(f.x == 0 && f.y == viewHeight) {
+                drawPoint(canvas);
+                beginTrace("drawPathA");
+                drawPathAContent(canvas,getPathAFromLowerLeft());
+                endTrace();
+
+                beginTrace("drawPathC");
+                drawPathCContent(canvas,getPathAFromLowerLeft());
+                endTrace();
+
+                beginTrace("drawPathB");
+                drawPathBContent(canvas,getPathAFromLowerLeft());
+                endTrace();
+
+            } else if (f.x == 0 && f.y == 0) {
+                drawPoint(canvas);
+                beginTrace("drawPathA");
+                drawPathAContent(canvas,getPathAFromTopLeft());
+                endTrace();
+
+                beginTrace("drawPathC");
+                drawPathCContent(canvas,getPathAFromTopLeft());
+                endTrace();
+
+                beginTrace("drawPathB");
+                drawPathBContent(canvas,getPathAFromTopLeft());
+                endTrace();
             }
         }
 
     }
+    private Paint paint = new Paint();
+    public void drawPoint(Canvas canvas) {
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(100);
+        canvas.drawPoint(f.x, f.y, paint);
+        canvas.drawText("f",f.x, f.y, paint);
+        canvas.drawPoint(a.x, a.y, paint);
+        canvas.drawText("a",a.x, a.y, paint);
+        canvas.drawPoint(b.x, b.y, paint);
+        canvas.drawText("b",b.x, b.y, paint);
+        canvas.drawPoint(c.x, c.y, paint);
+        canvas.drawText("c",c.x, c.y, paint);
+        canvas.drawPoint(d.x, d.y, paint);
+        canvas.drawText("d",d.x, d.y, paint);
+        canvas.drawPoint(e.x, e.y, paint);
+        canvas.drawText("e",e.x, e.y, paint);
+        canvas.drawPoint(j.x, j.y, paint);
+        canvas.drawText("j",j.x, j.y, paint);
+        canvas.drawPoint(h.x, h.y, paint);
+        canvas.drawText("h",h.x, h.y, paint);
+        canvas.drawPoint(i.x, i.y, paint);
+        canvas.drawText("i",i.x, i.y, paint);
+        canvas.drawPoint(j.x, j.y, paint);
+        canvas.drawText("j",j.x, j.y, paint);
+        canvas.drawPoint(k.x, k.y, paint);
+        canvas.drawText("k",k.x, k.y, paint);
 
+
+    }
     @TargetApi(18)
     private void beginTrace(String tag){
         Trace.beginSection(tag);
@@ -236,8 +294,12 @@ public class BookPageView extends View {
             float y = mScroller.getCurrY();
             if(style.equals(STYLE_TOP_RIGHT)){
                 setTouchPoint(x,y,STYLE_TOP_RIGHT);
-            }else {
+            }else if (style.equals(STYLE_LOWER_RIGHT)) {
                 setTouchPoint(x,y,STYLE_LOWER_RIGHT);
+            } else if (style.equals(STYLE_LOWER_LEFT)) {
+                setTouchPoint(x,y,STYLE_LOWER_LEFT);
+            } else if (style.equals(STYLE_TOP_LEFT)) {
+                setTouchPoint(x,y,STYLE_TOP_LEFT);
             }
         }
     }
@@ -249,24 +311,28 @@ public class BookPageView extends View {
             case MotionEvent.ACTION_DOWN:
                 float x = event.getX();
                 float y = event.getY();
-                if(x<=viewWidth/3){//左
-                    style = STYLE_LEFT;
+                if(x<=viewWidth/3 ){//左
+                    if (y<=viewHeight/3) { // shang
+                        style = STYLE_TOP_LEFT;
+                    } else if (y>=viewHeight/3 && y<=viewHeight*2/3) { // zhong
+                        style = STYLE_LEFT;
+                    } else if (y>=viewHeight*2/3) { // xia
+                        style = STYLE_LOWER_LEFT;
+                    }
+
                     setTouchPoint(x,y,style);
 
-                }else if(x>viewWidth/3 && y<=viewHeight/3){//上
-                    style = STYLE_TOP_RIGHT;
-                    setTouchPoint(x,y,style);
-
-                }else if(x>viewWidth*2/3 && y>viewHeight/3 && y<=viewHeight*2/3){//右
-                    style = STYLE_RIGHT;
-                    setTouchPoint(x,y,style);
-
-                }else if(x>viewWidth/3 && y>viewHeight*2/3){//下
-                    style = STYLE_LOWER_RIGHT;
-                    setTouchPoint(x,y,style);
-
-                }else if(x>viewWidth/3 && x<viewWidth*2/3 && y>viewHeight/3 && y<viewHeight*2/3){//中
-                    style = STYLE_MIDDLE;
+                }else if(x>viewWidth*2/3 ){//右
+                    if (y<=viewHeight/3) { // shang
+                        style = STYLE_TOP_RIGHT;
+                        setTouchPoint(x,y,style);
+                    } else if (y>viewHeight/3 && y<=viewHeight*2/3) { // zhong
+                        style = STYLE_RIGHT;
+                        setTouchPoint(x,y,style);
+                    } else if(y>viewHeight*2/3) {
+                        style = STYLE_LOWER_RIGHT;
+                        setTouchPoint(x,y,style);
+                    }
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -330,7 +396,7 @@ public class BookPageView extends View {
                 }*/
                 postInvalidate();
                 break;
-            case STYLE_LEFT:
+
             case STYLE_RIGHT:
                 a.y = viewHeight-1;
                 f.x = viewWidth;
@@ -347,6 +413,26 @@ public class BookPageView extends View {
                     calcPointAByTouchPoint();
                     calcPointsXY(a,f);
                 }*/
+                postInvalidate();
+                break;
+            case STYLE_LOWER_LEFT:
+                f.x = 0;
+                f.y = viewHeight;
+                calcPointsXY(a,f);
+
+                postInvalidate();
+                break;
+            case STYLE_TOP_LEFT:
+                f.x = 0;
+                f.y = 0;
+                calcPointsXY(a,f);
+                postInvalidate();
+                break;
+            case STYLE_LEFT:
+                a.y = 1;
+                f.x = 0;
+                f.y = 0;
+                calcPointsXY(a,f);
                 postInvalidate();
                 break;
             default:
@@ -442,6 +528,7 @@ public class BookPageView extends View {
 
     /**
      * 绘制A区域左阴影
+     *
      * @param canvas
      */
     private void drawPathALeftShadow(Canvas canvas, Path pathA){
@@ -452,33 +539,66 @@ public class BookPageView extends View {
         int right;
         int top = (int) e.y;
         int bottom = (int) (e.y+viewHeight);
+        Path mPath = new Path();
 
         GradientDrawable gradientDrawable;
         if (style.equals(STYLE_TOP_RIGHT)) {
             gradientDrawable = drawableLeftTopRight;
             left = (int) (e.x - lPathAShadowDis /2);
             right = (int) (e.x);
-        } else {
+            mPath.moveTo(a.x- Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
+            mPath.lineTo(d.x,d.y);
+            mPath.lineTo(e.x,e.y);
+            mPath.lineTo(a.x,a.y);
+
+
+        } else if (style.equals(STYLE_TOP_LEFT)){
             gradientDrawable = drawableLeftLowerRight;
             left = (int) (e.x);
             right = (int) (e.x + lPathAShadowDis /2);
+            mPath.moveTo(a.x + Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
+            mPath.lineTo(d.x,d.y);
+            mPath.lineTo(e.x,e.y);
+            mPath.lineTo(a.x,a.y);
+
+        } else if (style.equals(STYLE_LOWER_LEFT)) {
+            gradientDrawable = drawableLeftTopRight;
+            left = (int) (e.x );
+            right = (int) (e.x + lPathAShadowDis);
+
+            mPath.moveTo(a.x +  Math.max(rPathAShadowDis, lPathAShadowDis) , a.y +  Math.max(rPathAShadowDis, lPathAShadowDis));
+            mPath.lineTo(d.x,d.y);
+            mPath.lineTo(e.x,e.y);
+            mPath.lineTo(a.x,a.y);
+
+        } else if (style.equals(STYLE_TOP_LEFT)) {
+            gradientDrawable = drawableLeftTopRight;
+            left = (int) (e.x - lPathAShadowDis /2);
+            right = (int) (e.x +  lPathAShadowDis /2);
+
+            mPath.moveTo(a.x +  Math.min(rPathAShadowDis, lPathAShadowDis) /2, a.y);
+            mPath.lineTo(d.x,d.y);
+            mPath.lineTo(e.x,e.y);
+            mPath.lineTo(a.x,a.y);
+
+        } else {
+            // 所有情况都不是
+            gradientDrawable = drawableLeftTopRight;
+            left = (int) (e.x + lPathAShadowDis /2);
+            right = (int) (e.x);
+
+
         }
 
-        Path mPath = new Path();
-        mPath.moveTo(a.x- Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
-        mPath.lineTo(d.x,d.y);
-        mPath.lineTo(e.x,e.y);
-        mPath.lineTo(a.x,a.y);
         mPath.close();
         canvas.clipPath(pathA);
         canvas.clipPath(mPath, Region.Op.INTERSECT);
-
         float mDegrees = (float) Math.toDegrees(Math.atan2(e.x-a.x, a.y-e.y));
         canvas.rotate(mDegrees, e.x, e.y);
-
         gradientDrawable.setBounds(left,top,right,bottom);
         gradientDrawable.draw(canvas);
     }
+
 
     /**
      * 绘制A区域右阴影
@@ -491,14 +611,47 @@ public class BookPageView extends View {
         float viewDiagonalLength = (float) Math.hypot(viewWidth, viewHeight);//view对角线长度
         int left = (int) h.x;
         int right = (int) (h.x + viewDiagonalLength*10);//需要足够长的长度
-        int top;
-        int bottom;
-
+        int top, bottom;
+        Path mPath = new Path();
         GradientDrawable gradientDrawable;
+
         if (style.equals(STYLE_TOP_RIGHT)) {
             gradientDrawable = drawableRightTopRight;
             top = (int) (h.y- rPathAShadowDis /2);
             bottom = (int) h.y;
+
+            mPath.moveTo(a.x- Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
+            mPath.lineTo(h.x,h.y);
+            mPath.lineTo(a.x,a.y);
+
+        } else if(style.equals(STYLE_LOWER_RIGHT)){
+            gradientDrawable = drawableRightLowerRight;
+            top = (int) h.y;
+            bottom = (int) (h.y+ rPathAShadowDis /2);
+
+            mPath.moveTo(a.x- Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
+            mPath.lineTo(h.x,h.y);
+            mPath.lineTo(a.x,a.y);
+
+        } else if (style.equals(STYLE_TOP_LEFT)) {
+            gradientDrawable = drawableRightLowerRight;
+            top = (int) h.y;
+            bottom = (int) (h.y+ rPathAShadowDis /2);
+
+            mPath.moveTo(a.x+ Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
+            mPath.lineTo(h.x,h.y);
+            mPath.lineTo(a.x,a.y);
+
+        } else if (style.equals(STYLE_LOWER_LEFT)) {
+
+            gradientDrawable = drawableRightLowerRight;
+            top = (int) h.y;
+            bottom = (int) (h.y+ rPathAShadowDis /2);
+
+            mPath.moveTo(a.x+ Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
+            mPath.lineTo(h.x,h.y);
+            mPath.lineTo(a.x,a.y);
+
         } else {
             gradientDrawable = drawableRightLowerRight;
             top = (int) h.y;
@@ -506,10 +659,6 @@ public class BookPageView extends View {
         }
         gradientDrawable.setBounds(left,top,right,bottom);
 
-        Path mPath = new Path();
-        mPath.moveTo(a.x- Math.max(rPathAShadowDis, lPathAShadowDis) /2,a.y);
-        mPath.lineTo(h.x,h.y);
-        mPath.lineTo(a.x,a.y);
         mPath.close();
         canvas.clipPath(pathA);
         canvas.clipPath(mPath, Region.Op.INTERSECT);
@@ -589,6 +738,42 @@ public class BookPageView extends View {
     }
 
     /**
+     * 获取f点在左上角的pathA
+     * @return
+     */
+    private Path getPathAFromTopLeft(){
+        pathA.reset();
+        pathA.moveTo(c.x,c.y);// 移动到c点
+        pathA.quadTo(e.x,e.y,b.x,b.y);//从c到b画贝塞尔曲线，控制点为e
+        pathA.lineTo(a.x,a.y);//移动到a点
+        pathA.lineTo(k.x,k.y);//移动到k点
+        pathA.quadTo(h.x,h.y,j.x,j.y);//从k到j画贝塞尔曲线，控制点为h
+        pathA.lineTo(0, viewHeight);//移动到
+        pathA.lineTo(viewWidth, viewHeight);//移动到
+        pathA.lineTo(viewWidth, 0);//移动到
+        pathA.close();
+        return pathA;
+    }
+
+    /**
+     * 获取f点在左下角的pathA
+     * @return
+     */
+    private Path getPathAFromLowerLeft(){
+        pathA.reset();
+        pathA.lineTo(viewWidth, 0);// 移动到 右上顶点
+        pathA.lineTo(viewWidth, viewHeight);// 移动到 右下
+        pathA.lineTo(c.x,c.y);//移动到c点
+        pathA.quadTo(e.x,e.y,b.x,b.y);//从c到b画贝塞尔曲线，控制点为e
+        pathA.lineTo(a.x,a.y);//移动到a点
+        pathA.lineTo(k.x,k.y);//移动到k点
+        pathA.quadTo(h.x,h.y,j.x,j.y);//从k到j画贝塞尔曲线，控制点为h
+        pathA.lineTo(0,0);//移动到右上角
+        pathA.close();//闭合区域
+        return pathA;
+    }
+
+    /**
      * 绘制B区域内容
      * @param canvas
      * @param pathA
@@ -596,7 +781,7 @@ public class BookPageView extends View {
     private void drawPathBContent(Canvas canvas, Path pathA){
         canvas.save();
         canvas.clipPath(pathA);//裁剪出A区域
-        canvas.clipPath(getPathC(),Region.Op.UNION);//裁剪出A和C区域的全集
+        canvas.clipPath(getPathC(),Region.Op.UNION);// 裁剪出A和C区域的全集
         canvas.clipPath(getPathB(), Region.Op.REVERSE_DIFFERENCE);//裁剪出B区域中不同于与AC区域的部分
         canvas.drawBitmap(pathBContentBitmap, 0, 0, null);
 
@@ -616,16 +801,43 @@ public class BookPageView extends View {
 
         int left;
         int right;
-        int top = (int) c.y;
-        int bottom = (int) (viewDiagonalLength + c.y);
+        int top = 0;
+        int bottom = 0;
         GradientDrawable gradientDrawable;
         if(style.equals(STYLE_TOP_RIGHT)){//f点在右上角
+
+             top = (int) c.y;
+             bottom = (int) (viewDiagonalLength + c.y);
             //从左向右线性渐变
             gradientDrawable = drawableBTopRight;
 
             left = (int) (c.x - deepOffset);//c点位于左上角
             right = (int) (c.x + aTof/4 + lightOffset);
-        }else {
+        }else if(style.equals(STYLE_LOWER_RIGHT)) {
+             top = (int) c.y;
+             bottom = (int) (viewDiagonalLength + c.y);
+            //从右向左线性渐变
+            gradientDrawable = drawableBLowerRight;
+
+            left = (int) (c.x - aTof/4 - lightOffset);//c点位于左下角
+            right = (int) (c.x + deepOffset);
+        } else if (style.equals(STYLE_TOP_LEFT)) {
+             top = (int) c.y;
+             bottom = (int) (viewDiagonalLength - c.y);
+            //
+            gradientDrawable = drawableBTopRight;
+
+            left = (int) (c.x - deepOffset);//
+            right = (int) (c.x - aTof/4 - lightOffset);
+
+        } else if (style.equals(STYLE_LOWER_LEFT)) {
+            top = (int) c.y;
+            bottom = (int) (viewDiagonalLength - c.y);
+            gradientDrawable = drawableBTopRight;
+
+            left = (int) (c.x - deepOffset);//
+            right = (int) (c.x + aTof/4 - lightOffset);
+        } else {
             //从右向左线性渐变
             gradientDrawable = drawableBLowerRight;
 
@@ -633,7 +845,6 @@ public class BookPageView extends View {
             right = (int) (c.x + deepOffset);
         }
         gradientDrawable.setBounds(left,top,right,bottom);//设置阴影矩形
-
         float rotateDegrees = (float) Math.toDegrees(Math.atan2(e.x- f.x, h.y - f.y));//旋转角度
         canvas.rotate(rotateDegrees, c.x, c.y);//以c为中心点旋转
         gradientDrawable.draw(canvas);
@@ -666,15 +877,15 @@ public class BookPageView extends View {
         float eh = (float) Math.hypot(f.x - e.x,h.y - f.y);
         float sin0 = (f.x - e.x) / eh;
         float cos0 = (h.y - f.y) / eh;
-        //设置翻转和旋转矩阵
+        // 设置翻转和旋转矩阵
         mMatrixArray[0] = -(1-2 * sin0 * sin0);
         mMatrixArray[1] = 2 * sin0 * cos0;
         mMatrixArray[3] = 2 * sin0 * cos0;
         mMatrixArray[4] = 1 - 2 * sin0 * sin0;
 
         mMatrix.reset();
-        mMatrix.setValues(mMatrixArray);//翻转和旋转
-        mMatrix.preTranslate(-e.x, -e.y);//沿当前XY轴负方向位移得到 矩形A₃B₃C₃D₃
+        mMatrix.setValues(mMatrixArray);// 翻转和旋转
+        mMatrix.preTranslate(-e.x, -e.y);// 沿当前XY轴负方向位移得到 矩形A₃B₃C₃D₃
         mMatrix.postTranslate(e.x, e.y);//沿原XY轴方向位移得到 矩形A4 B4 C4 D4
         canvas.drawBitmap(pathCContentBitmap, mMatrix, null);
 
@@ -699,18 +910,39 @@ public class BookPageView extends View {
         int top = (int) c.y;
         int bottom = (int) (viewDiagonalLength + c.y);
         GradientDrawable gradientDrawable;
+        float mDegrees  = (float) Math.toDegrees(Math.atan2(e.x- f.x, h.y - f.y));
         if (style.equals(STYLE_TOP_RIGHT)) {
+
             gradientDrawable = drawableCTopRight;
             left = (int) (c.x - lightOffset);
             right = (int) (c.x + minDisToControlPoint + deepOffset);
+        } else if(style.equals(STYLE_LOWER_RIGHT)) {
+            gradientDrawable = drawableCLowerRight;
+            left = (int) (c.x - minDisToControlPoint - deepOffset);
+            right = (int) (c.x + lightOffset);
+        } else if(style.equals(STYLE_TOP_LEFT)) {
+
+            gradientDrawable = drawableCLowerRight;
+            left = (int) (c.x - minDisToControlPoint - deepOffset);
+            right = (int) (c.x + lightOffset);
+
+        } else if(style.equals(STYLE_LOWER_LEFT)) {
+
+            gradientDrawable = drawableCTopRight;
+            left = (int) (c.x - lightOffset);
+            right = (int) (c.x + minDisToControlPoint + deepOffset);
+
+        } else if (style.equals(STYLE_LEFT)){
+            gradientDrawable = drawableCLowerRight;
+            left = (int) (c.x - minDisToControlPoint - deepOffset);
+            right = (int) (c.x + lightOffset);
         } else {
+
             gradientDrawable = drawableCLowerRight;
             left = (int) (c.x - minDisToControlPoint - deepOffset);
             right = (int) (c.x + lightOffset);
         }
         gradientDrawable.setBounds(left,top,right,bottom);
-
-        float mDegrees = (float) Math.toDegrees(Math.atan2(e.x- f.x, h.y - f.y));
         canvas.rotate(mDegrees, c.x, c.y);
         gradientDrawable.draw(canvas);
     }
@@ -736,41 +968,83 @@ public class BookPageView extends View {
      * @param f
      */
     private void calcPointsXY(MyPoint a, MyPoint f){
-        g.x = (a.x + f.x) / 2;
-        g.y = (a.y + f.y) / 2;
+        if (f.x >0) { // 右边往左 下一页
+            g.x = (a.x + f.x) / 2;
+            g.y = (a.y + f.y) / 2;
 
-        e.x = g.x - (f.y - g.y) * (f.y - g.y) / (f.x - g.x);
-        e.y = f.y;
+            e.x = g.x - (f.y - g.y) * (f.y - g.y) / (f.x - g.x);
+            e.y = f.y;
 
-        h.x = f.x;
-        h.y = g.y - (f.x - g.x) * (f.x - g.x) / (f.y - g.y);
+            h.x = f.x;
+            h.y = g.y - (f.x - g.x) * (f.x - g.x) / (f.y - g.y);
 
-        c.x = e.x - (f.x - e.x) / 2;
-        c.y = f.y;
+            c.x = e.x - (f.x - e.x) / 2;
+            c.y = f.y;
 
-        j.x = f.x;
-        j.y = h.y - (f.y - h.y) / 2;
+            j.x = f.x;
+            j.y = h.y - (f.y - h.y) / 2;
 
-        b = getIntersectionPoint(a,e,c,j);
-        k = getIntersectionPoint(a,h,c,j);
+            b = getIntersectionPoint(a,e,c,j);
+            k = getIntersectionPoint(a,h,c,j);
 
-        d.x = (c.x + 2 * e.x + b.x) / 4;
-        d.y = (2 * e.y + c.y + b.y) / 4;
+            d.x = (c.x + 2 * e.x + b.x) / 4;
+            d.y = (2 * e.y + c.y + b.y) / 4;
 
-        i.x = (j.x + 2 * h.x + k.x) / 4;
-        i.y = (2 * h.y + j.y + k.y) / 4;
+            i.x = (j.x + 2 * h.x + k.x) / 4;
+            i.y = (2 * h.y + j.y + k.y) / 4;
 
-        //计算d点到ae的距离
-        float lA = a.y-e.y;
-        float lB = e.x-a.x;
-        float lC = a.x*e.y-e.x*a.y;
-        lPathAShadowDis = Math.abs((lA*d.x+lB*d.y+lC)/(float) Math.hypot(lA,lB));
+            //计算d点到ae的距离
+            float lA = a.y-e.y;
+            float lB = e.x-a.x;
+            float lC = a.x*e.y-e.x*a.y;
+            lPathAShadowDis = Math.abs((lA*d.x+lB*d.y+lC)/(float) Math.hypot(lA,lB));
 
-        //计算i点到ah的距离
-        float rA = a.y-h.y;
-        float rB = h.x-a.x;
-        float rC = a.x*h.y-h.x*a.y;
-        rPathAShadowDis = Math.abs((rA*i.x+rB*i.y+rC)/(float) Math.hypot(rA,rB));
+            //计算i点到ah的距离
+            float rA = a.y-h.y;
+            float rB = h.x-a.x;
+            float rC = a.x*h.y-h.x*a.y;
+            rPathAShadowDis = Math.abs((rA*i.x+rB*i.y+rC)/(float) Math.hypot(rA,rB));
+        } else {
+            // 左边 往前翻页
+            g.x = (a.x + f.x) / 2;
+            g.y = (a.y + f.y) / 2;
+            // gf 2 = gm 2 + mf 2  mf/gf = gf/ef  ef = gf2/mf
+            e.x = (int)(Math.pow(g.x, 2) + Math.pow(f.y - g.y, 2))/g.x;
+            e.y = f.y;
+            // mf / gm = hf / ef   hf = mf * ef /gm
+            h.x = 0;
+            h.y = f.y - (g.x * e.x / (f.y - g.y));
+
+            c.x = e.x + (e.x) / 2;
+            c.y = f.y;
+
+            j.x = 0;
+            j.y = h.y - (f.y - h.y) / 2;
+
+            b = getIntersectionPoint(a,e,c,j);
+            k = getIntersectionPoint(a,h,c,j);
+
+
+            d.x = (c.x + 2 * e.x + b.x) / 4;
+            d.y = (2 * e.y + c.y + b.y) / 4;
+
+            i.x = (j.x + 2 * h.x + k.x) / 4;
+            i.y = (2 * h.y + j.y + k.y) / 4;
+
+            //计算d点到ae的距离
+            float lA = a.y-e.y;
+            float lB = e.x-a.x;
+            float lC = a.x*e.y-e.x*a.y;
+            lPathAShadowDis = Math.abs((lA*d.x+lB*d.y+lC)/(float) Math.hypot(lA,lB));
+
+            //计算i点到ah的距离
+            float rA = a.y-h.y;
+            float rB = h.x-a.x;
+            float rC = a.x*h.y-h.x*a.y;
+            rPathAShadowDis = Math.abs((rA*i.x+rB*i.y+rC)/(float) Math.hypot(rA,rB));
+
+        }
+
     }
 
     /**
