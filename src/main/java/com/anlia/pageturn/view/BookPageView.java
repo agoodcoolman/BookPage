@@ -144,7 +144,7 @@ public class BookPageView extends View {
         //下面开始绘制区域内的内容...
         mCanvas.drawPath(getPathDefault(),pathPaint);
         mCanvas.drawText("这是在A区域的内容...AAAA", viewWidth-260, viewHeight-100, textPaint);
-
+        mCanvas.drawText("这是在A区域的内容...AAAA", 60, viewHeight-100, textPaint);
         //结束绘制区域内的内容...
     }
 
@@ -871,8 +871,7 @@ public class BookPageView extends View {
     private void drawPathCContent(Canvas canvas, Path pathA){
         canvas.save();
         canvas.clipPath(pathA);
-        canvas.clipPath(getPathC(), Region.Op.REVERSE_DIFFERENCE);//裁剪出C区域不同于A区域的部分
-//        canvas.drawPath(getPathC(),pathCPaint);
+        canvas.clipPath(getPathC(), Region.Op.REVERSE_DIFFERENCE);// 裁剪出C区域不同于A区域的部分
 
         float eh = (float) Math.hypot(f.x - e.x,h.y - f.y);
         float sin0 = (f.x - e.x) / eh;
@@ -888,6 +887,9 @@ public class BookPageView extends View {
         mMatrix.preTranslate(-e.x, -e.y);// 沿当前XY轴负方向位移得到 矩形A₃B₃C₃D₃
         mMatrix.postTranslate(e.x, e.y);//沿原XY轴方向位移得到 矩形A4 B4 C4 D4
         canvas.drawBitmap(pathCContentBitmap, mMatrix, null);
+
+
+        canvas.clipPath(getPathB());
 
         drawPathCShadow(canvas);
         canvas.restore();
